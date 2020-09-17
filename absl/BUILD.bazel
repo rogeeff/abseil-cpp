@@ -1,5 +1,5 @@
 #
-# Copyright 2017 The Abseil Authors.
+# Copyright 2020 The Abseil Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,46 +14,12 @@
 # limitations under the License.
 #
 
-load(
-    ":compiler_config_setting.bzl",
-    "create_llvm_config",
-)
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache 2.0
 
-create_llvm_config(
-    name = "llvm_compiler",
-    visibility = [":__subpackages__"],
-)
-
-config_setting(
-    name = "osx",
-    constraint_values = [
-        "@bazel_tools//platforms:osx",
-    ],
-)
-
-config_setting(
-    name = "ios",
-    constraint_values = [
-        "@bazel_tools//platforms:ios",
-    ],
-)
-
-config_setting(
-    name = "windows",
-    values = {
-        "cpu": "x64_windows",
-    },
-    visibility = [":__subpackages__"],
-)
-
-config_setting(
-    name = "ppc",
-    values = {
-        "cpu": "ppc",
-    },
-    visibility = [":__subpackages__"],
-)
+# Expose license for external usage through bazel.
+exports_files([
+    "AUTHORS",
+    "LICENSE",
+])
