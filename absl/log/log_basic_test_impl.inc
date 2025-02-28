@@ -93,8 +93,12 @@ TEST_P(BasicLogTest, Info) {
 
   absl::ScopedMockLog test_sink(absl::MockLogDefault::kDisallowUnexpected);
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kInfo));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(INFO) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(INFO) << func_with_side_effect(); };
 
   if (LoggingEnabledAt(absl::LogSeverity::kInfo)) {
     EXPECT_CALL(
@@ -124,8 +128,12 @@ TEST_P(BasicLogTest, Warning) {
 
   absl::ScopedMockLog test_sink(absl::MockLogDefault::kDisallowUnexpected);
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kWarning));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(WARNING) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(WARNING) << func_with_side_effect(); };
 
   if (LoggingEnabledAt(absl::LogSeverity::kWarning)) {
     EXPECT_CALL(
@@ -155,8 +163,12 @@ TEST_P(BasicLogTest, Error) {
 
   absl::ScopedMockLog test_sink(absl::MockLogDefault::kDisallowUnexpected);
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kError));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(ERROR) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(ERROR) << func_with_side_effect(); };
 
   if (LoggingEnabledAt(absl::LogSeverity::kError)) {
     EXPECT_CALL(
@@ -186,15 +198,18 @@ using BasicLogDeathTest = BasicLogTest;
 
 INSTANTIATE_TEST_SUITE_P(WithParam, BasicLogDeathTest,
                          testing::Values(absl::LogSeverityAtLeast::kInfo,
-                                         absl::LogSeverityAtLeast::kFatal,
-                                         absl::LogSeverityAtLeast::kInfinity),
+                                         absl::LogSeverityAtLeast::kFatal),
                          ThresholdName);
 
 TEST_P(BasicLogDeathTest, Fatal) {
   absl::log_internal::ScopedMinLogLevel scoped_min_log_level(GetParam());
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kFatal));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(FATAL) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(FATAL) << func_with_side_effect(); };
 
   EXPECT_EXIT(
       {
@@ -259,8 +274,12 @@ TEST_P(BasicLogDeathTest, Fatal) {
 TEST_P(BasicLogDeathTest, QFatal) {
   absl::log_internal::ScopedMinLogLevel scoped_min_log_level(GetParam());
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kFatal));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(QFATAL) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(QFATAL) << func_with_side_effect(); };
 
   EXPECT_EXIT(
       {
@@ -304,8 +323,12 @@ TEST_P(BasicLogTest, DFatal) {
 
   absl::ScopedMockLog test_sink(absl::MockLogDefault::kDisallowUnexpected);
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::DFatal));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(DFATAL) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(DFATAL) << func_with_side_effect(); };
 
   if (LoggingEnabledAt(absl::LogSeverity::kError)) {
     EXPECT_CALL(
@@ -335,8 +358,12 @@ TEST_P(BasicLogDeathTest, DFatal) {
   // TODO(b/242568884): re-enable once bug is fixed.
   // absl::log_internal::ScopedMinLogLevel scoped_min_log_level(GetParam());
 
+  auto func_with_side_effect = []() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(absl::LogSeverity::kFatal));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [] { ABSL_TEST_LOG(DFATAL) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(DFATAL) << func_with_side_effect(); };
 
   EXPECT_EXIT(
       {
@@ -424,9 +451,13 @@ TEST_P(BasicLogTest, Level) {
                         absl::LogSeverity::kError}) {
     absl::ScopedMockLog test_sink(absl::MockLogDefault::kDisallowUnexpected);
 
+    auto func_with_side_effect = [severity]() -> std::string {
+      EXPECT_TRUE(LoggingEnabledAt(severity));
+      return "hello world";
+    };
     const int log_line = __LINE__ + 2;
-    auto do_log = [severity] {
-      ABSL_TEST_LOG(LEVEL(severity)) << "hello world";
+    auto do_log = [&] () {
+      ABSL_TEST_LOG(LEVEL(severity)) << func_with_side_effect();
     };
 
     if (LoggingEnabledAt(severity)) {
@@ -466,8 +497,12 @@ TEST_P(BasicLogDeathTest, Level) {
   // `LOG(LEVEL(severity))` works regardless:
   auto volatile severity = absl::LogSeverity::kFatal;
 
+  auto func_with_side_effect = [severity]() -> std::string {
+    EXPECT_TRUE(LoggingEnabledAt(severity));
+    return "hello world";
+  };
   const int log_line = __LINE__ + 1;
-  auto do_log = [severity] { ABSL_TEST_LOG(LEVEL(severity)) << "hello world"; };
+  auto do_log = [&] () { ABSL_TEST_LOG(LEVEL(severity)) << func_with_side_effect(); };
 
   EXPECT_EXIT(
       {

@@ -36,6 +36,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/config.h"
 #include "absl/log/internal/voidify.h"
+#include "absl/log/globals.h"
 
 // `ABSL_LOG_INTERNAL_CONDITION` prefixes another macro that expands to a
 // temporary `LogMessage` instantiation followed by zero or more streamed
@@ -163,18 +164,24 @@
            (absl_log_internal_severity == ::absl::LogSeverity::kFatal && \
             (::absl::log_internal::AbortQuietly(), false)))))
 #else  // ndef ABSL_MIN_LOG_LEVEL
-#define ABSL_LOG_INTERNAL_CONDITION_INFO(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
-#define ABSL_LOG_INTERNAL_CONDITION_WARNING(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
-#define ABSL_LOG_INTERNAL_CONDITION_ERROR(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
-#define ABSL_LOG_INTERNAL_CONDITION_FATAL(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
+#define ABSL_LOG_INTERNAL_CONDITION_INFO(type, condition)   \
+  ABSL_LOG_INTERNAL_##type##_CONDITION(                     \
+    (condition) && ::absl::LogSeverity::kInfo >= absl::MinLogLevel())
+#define ABSL_LOG_INTERNAL_CONDITION_WARNING(type, condition)\
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && ::absl::LogSeverity::kWarning >= absl::MinLogLevel())
+#define ABSL_LOG_INTERNAL_CONDITION_ERROR(type, condition)  \
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && ::absl::LogSeverity::kError >= absl::MinLogLevel())
+#define ABSL_LOG_INTERNAL_CONDITION_FATAL(type, condition)  \
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && ::absl::LogSeverity::kFatal >= absl::MinLogLevel())
 #define ABSL_LOG_INTERNAL_CONDITION_QFATAL(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && ::absl::LogSeverity::kFatal >= absl::MinLogLevel())
 #define ABSL_LOG_INTERNAL_CONDITION_DFATAL(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && ::absl::LogSeverity::kFatal >= absl::MinLogLevel())
 #define ABSL_LOG_INTERNAL_CONDITION_LEVEL(severity)                            \
   for (int absl_log_internal_severity_loop = 1;                                \
        absl_log_internal_severity_loop; absl_log_internal_severity_loop = 0)   \
@@ -183,7 +190,9 @@
          absl_log_internal_severity_loop; absl_log_internal_severity_loop = 0) \
   ABSL_LOG_INTERNAL_CONDITION_LEVEL_IMPL
 #define ABSL_LOG_INTERNAL_CONDITION_LEVEL_IMPL(type, condition) \
-  ABSL_LOG_INTERNAL_##type##_CONDITION(condition)
+ABSL_LOG_INTERNAL_##type##_CONDITION(                       \
+  (condition) && absl_log_internal_severity >= absl::MinLogLevel())
+
 #endif  // ndef ABSL_MIN_LOG_LEVEL
 
 namespace absl {
